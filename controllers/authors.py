@@ -2,11 +2,8 @@ import json
 import logging
 
 from fastapi import HTTPException
-
-from models import author_books
 from models.authors import Author
 from models.author_books import Author_book
-
 from utils.database import execute_query_json
 
 
@@ -151,3 +148,109 @@ async def create_author(authors: Author) -> Author:
             return []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")    
+    
+## AUTHORS WITH BOOKS INTERACTION FUNCTIONS ##
+async def get_all_books(id_author: int) -> list[Author_book]:
+    select_script = """
+        SELECT
+            ab.id_book
+            , b.title
+            , ab.date_published
+        FROM library.author_books ab
+        inner join library.books b
+        on ab.id_book =b.id_book
+        WHERE ab.id_author = ?
+    """
+
+    params = [id_author]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No books found for the author")
+
+        return dict_result
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }")
+    
+async def get_one_book(id_author: int, id_book: int) -> Author_book:
+    select_script = """
+        SELECT
+            b.id_genre
+            , b.title
+            , b.date_published
+            , b.isbn
+            , b.its_active
+        FROM library.books b
+        inner join library.author_books ab 
+        on b.id_book = ab.id_book
+        WHERE ab.id_author = ?
+        and b.id_book = ?;
+    """
+
+    params = [id_author, id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No book found for the author")
+
+        return dict_result[0]
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }")
+    
+async def add_book_to_author(id_author: int, id_book: int) -> Author_book:
+
+    insert_script = """
+        INSERT INTO [library].[authors_books] ([id_author], [id_book])
+        VALUES (?, ?);
+    """
+
+    params = [
+        id_author,
+        id_book
+    ]
+
+    try:
+        await execute_query_json(insert_script, params, needs_commit=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+
+    select_script = """
+        SELECT
+            b.id_book
+            , b.id_genre
+            , b.title
+            , b.date_published
+            , b.isbn
+            , b.its_active
+        FROM library.books b
+        inner join library.author_books ab 
+        on b.id_book = ab.id_book
+        WHERE b.id_book = ?
+        and ab.id_author = ?;
+    """
+
+    params = [id_author, id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        return json.loads(result)[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+    
+async def remove_book_from_author(id_author: int, id_book: int) -> str:
+    delete_script = """
+        DELETE FROM [library].[authors_books]
+        WHERE [id_author] = ? AND [id_book] = ?;
+    """
+
+    params = [id_author, id_book]
+
+    try:
+        await execute_query_json(delete_script, params=params, needs_commit=True)
+        return "BOOK FROM AUTHOR REMOVED"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
