@@ -2,7 +2,7 @@ import json
 import logging
 
 from fastapi import HTTPException
-
+from models.loan_books import Loan_Books
 from models.loan import Loan
 from utils.database import execute_query_json
 
@@ -161,5 +161,154 @@ async def create_loan(loan: Loan) -> Loan:
     
 
 
-    #*****************************************************
-    #loan_books
+## LOANS WITH BOOKS INTERACTION FUNCTIONS ##
+async def get_all_books(id_loan: int) -> list[Loan_Books]:
+    select_script = """
+        SELECT
+            b.id_book
+            , b.title
+            , b.date_published
+            , b.return_status
+        FROM library.books b
+        inner join library.loan_books lb
+        on b.id_book =lb.id_book
+        WHERE lb.id_loan = ?
+    """
+
+    params = [id_loan]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No books found for the loan")
+
+        return dict_result
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }")
+    
+async def get_one_book(id_loan: int, id_book: int) -> Loan_Books:
+    select_script = """
+        SELECT
+            b.id_book
+            , b.genre
+            , b.title
+            , b.date_published
+            , b.isbn
+            , b.return_status
+        FROM library.books b
+        inner join library.loan_books lb 
+        on b.id_book = lb.id_book
+        WHERE lb.id_loan = ?
+        and b.id_book = ?;
+    """
+
+    params = [id_loan, id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No book found for the loan")
+
+        return dict_result[0]
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }")
+    
+async def add_book_to_loan(id_author: int, id_book: int) -> Loan_Books:
+
+    insert_script = """
+        INSERT INTO [library].[authors_books] ([id_author], [id_book])
+        VALUES (?, ?);
+    """
+
+    params = [
+        id_author,
+        id_book
+    ]
+
+    try:
+        await execute_query_json(insert_script, params, needs_commit=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+
+    select_script = """
+        SELECT
+            b.id_book
+            , b.id_genre
+            , b.title
+            , b.date_published
+            , b.isbn
+            , b.its_active
+        FROM library.books b
+        inner join library.author_books ab 
+        on b.id_book = ab.id_book
+        WHERE b.id_book = ?
+        and ab.id_author = ?;
+    """
+
+    params = [id_author, id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        return json.loads(result)[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+    
+async def remove_book_from_loan(id_loan: int, id_book: int) -> str:
+    delete_script = """
+        DELETE FROM [library].[loan_books]
+        WHERE [id_loan] = ? AND [id_book] = ?;
+    """
+
+    params = [id_loan, id_book]
+
+    try:
+        await execute_query_json(delete_script, params=params, needs_commit=True)
+        return "BOOK FROM LOAN REMOVED"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+    
+async def update_book_info(book_data: Loan_Books) -> Loan_Books:
+    dict = book_data.model_dump(exclude_none=True)
+    keys = [ k for k in  dict.keys() ]
+    keys.remove('id_loan')
+    keys.remove('id_book')
+    variables = " = ?, ".join(keys)+" = ?"
+
+    updatescript = f"""
+        UPDATE [library].[loan_books]
+        SET {variables}
+        WHERE [id_loan] = ? AND [id_book] = ?;
+    """
+
+    params = [ dict[v] for v in keys ]
+    params.append( book_data.id_loan )
+    params.append( book_data.id_book )
+
+    try:
+        await execute_query_json( updatescript, params, needs_commit=True )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")
+
+    select_script = """
+        SELECT
+            b.id_genre
+            , b.title
+            , b.date_published
+            , b.isbn
+            , b.return_status
+        FROM library.books b
+        inner join library.loan_books lb 
+        on b.id_book = lb.id_book
+        WHERE lb.id_loan = ?
+        and b.id_book = ?;
+    """
+
+    params = [book_data.id_loan, book_data.id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        return json.loads(result)[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: { str(e) }")

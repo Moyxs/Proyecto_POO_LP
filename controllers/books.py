@@ -3,7 +3,8 @@ import logging
 from datetime import date
 
 from fastapi import HTTPException
-
+from models.author_books import Author_book
+from models.loan_books import Loan_Books
 from models.books import Books
 from utils.database import execute_query_json
 
@@ -164,4 +165,61 @@ async def create_books(books: Books) -> Books:
         else:
             return []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")    
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")  
+
+## BOOKS WITH AUTHORS INTERACTION FUNCTIONS ##
+async def get_all_authors(id_book: int) -> list[Author_book]:
+    select_script = """
+        SELECT
+            ab.id_author
+            , a.first_name
+            , a.last_name
+            , ab.date_published
+        FROM library.author_books ab
+        inner join library.authors a
+        on ab.id_author = a.id_author
+        inner join library.books b
+        on ab.id_book =b.id_book
+        WHERE ab.id_author = ?
+    """
+
+    params = [id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No authors found for the book")
+
+        return dict_result
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }") 
+    
+
+## BOOKS WITH LOANS INTERACTION FUNCTIONS ##
+async def get_all_loans(id_book: int) -> list[Loan_Books]:
+    select_script = """
+        SELECT
+            l.id_loan
+            , l.id_customers
+            , lb.return_status
+            , l.loan_active
+            , l.date_loan
+            , l.date_devolution
+        FROM library.loans l
+        inner join library.loan_books lb
+        on l.id_loan = lb.id_loan
+        WHERE lb.id_book = ?
+    """
+
+    params = [id_book]
+
+    try:
+        result = await execute_query_json(select_script, params=params)
+        dict_result = json.loads(result)
+        if len(dict_result) == 0:
+            raise HTTPException(status_code=404, detail="No loans found for the book")
+
+        return dict_result
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Database error: { str(e) }") 
