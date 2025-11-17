@@ -1,10 +1,10 @@
 import uvicorn 
-from typing import Union
 from fastapi import FastAPI
-from utils.database import execute_query_json
-import os
-import json
-
+from routes.authors import router as authors_router
+from routes.books import router as books_router
+from routes.customer import router as customer_router
+from routes.genres import router as genres_router
+from routes.loan import router as loan_router
 
 app = FastAPI()
 
@@ -16,19 +16,13 @@ def read_root():
         "version": "0.1.0"
     }
 
+app.include_router(authors_router)
+app.include_router(books_router)
+app.include_router(customer_router)
+app.include_router(genres_router)
+app.include_router(loan_router)
 
-@app.get("/authors/")
-async def get_all_authors():
-    sqlscript= """
-  SELECT [id_author]
-      ,[first_name]
-      ,[last_name]
-      ,[nationality]
-  FROM [library].[authors]
-"""
-    result = await execute_query_json(sqlscript)
-    result_dict = json.loads(result)
-    return result_dict
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

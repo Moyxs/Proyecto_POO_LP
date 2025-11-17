@@ -1,29 +1,27 @@
 import json
 import logging
-from datetime import date
 
 from fastapi import HTTPException
 
-from models.books import Books
+from models.loan import Loan
 from utils.database import execute_query_json
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)    
 
-async def get_one(id_book: int) -> Books:
+async def get_one(id_loan: int) -> Loan:
     sqlscript = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE id_book = ?;
+    SELECT [id_loan],
+        [id_customer],
+        [date_loan],
+        [date_devolution],
+        [loan_active]
+    FROM [library].[loan]
+    WHERE id_loan = ?;
     """
     
-    params = [id_book]
+    params = [id_loan]
 
     result_dict = []
 
@@ -35,22 +33,20 @@ async def get_one(id_book: int) -> Books:
         if len(result_dict) > 0:
             return result_dict[0]
         else:
-            raise HTTPException(status_code=404, detail="Book not found")
+            raise HTTPException(status_code=404, detail="Loan not found")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
 
-async def get_all() -> list[Books]:
+async def get_all() -> list[Loan]:
     selectscript = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books];    
-
+    SELECT [id_loan],
+        [id_customer],
+        [date_loan],
+        [date_devolution],
+        [loan_active]
+    FROM [library].[loan];
  """ 
     result_dict = []
     try:
@@ -60,34 +56,34 @@ async def get_all() -> list[Books]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def delete_books(id_book: int) -> str:
+async def delete_loan(id_loan: int) -> str:
     deletescript = """
-    DELETE FROM [library].[books]
-    WHERE id_book = ?;
+    DELETE FROM [library].[loan]
+    WHERE id_loan = ?;
     """
-    params = [id_book]
+    params = [id_loan]
 
     try:
         await execute_query_json(deletescript, params = params, needs_commit=True)
-        return "Book deleted successfully."
+        return "Loan deleted successfully."
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def update_books(authors: Books) -> Books:
+async def update_loan(loan: Loan) -> Loan:
     
-    dict = Books.model_dump(exclude_none=True)
+    dict = Loan.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove("id_book")
+    keys.remove("id_loan")
     vaiables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
-    UPDATE [library].[books]
+    UPDATE [library].[loan]
     SET {vaiables}
-    WHERE id_book = ?;
+    WHERE id_loan = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(Books.id_book)
+    params.append(loan.id_loan)
 
     update_result = None
     try:
@@ -95,16 +91,15 @@ async def update_books(authors: Books) -> Books:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE id_book = ?
+    SELECT [id_loan],
+        [id_customer],
+        [date_loan],
+        [date_devolution],
+        [loan_active]
+    FROM [library].[loan]
+    WHERE id_loan = ?;
     """
-    params = [Books.title]
+    params = [Loan.title]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -119,17 +114,17 @@ async def update_books(authors: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-async def create_books(books: Books) -> Books:
+async def create_loan(loan: Loan) -> Loan:
     sqlscript = """
-    INSERT INTO [library].[books] ([id_genre], [title], [isbn], [date_publication], [its_active] )
-    VALUES (?, ?, ?, ?, ?);
+    INSERT INTO [library].[loan] ([id_customer], [date_loan], [date_devolution], [loan_active] )
+    VALUES (?, ?, ?, ?);
+
     """
     params = [
-        books.id_genre,
-        books.title,
-        books.isbn,
-        books.date_publication,
-        books.its_active
+        loan.id_customer,
+        loan.date_loan,
+        loan.date_devolution,
+        loan.loan_active
     ]
 
     insert_result = None
@@ -139,18 +134,16 @@ async def create_books(books: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE isbn = ?
-
+    SELECT [id_loan],
+        [id_customer],
+        [date_loan],
+        [date_devolution],
+        [loan_active]
+    FROM [library].[loan]
+    WHERE id_loan = ?;
     """
     
-    params = [books.isbn]
+    params = [loan.id_customer]
 
     result_dict = []
 
@@ -164,4 +157,9 @@ async def create_books(books: Books) -> Books:
         else:
             return []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")    
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")   
+    
+
+
+    #*****************************************************
+    #loan_books

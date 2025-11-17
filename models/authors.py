@@ -21,10 +21,3 @@ class Author(BaseModel):
         pattern=r"^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$",
         examples=["García","Martínez"]
     )
-
-    nationality: Optional[str] = Field(
-        default=None,
-        description="La nacionalidad del autor ",
-        pattern=r"^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$",
-        examples=["Española","Mexicano"]
-    )

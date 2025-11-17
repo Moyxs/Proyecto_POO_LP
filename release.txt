@@ -18,7 +18,7 @@ REPO_PROD=${ACR_PRD}.azurecr.io/sisproyect-api
 ########################################
 
 # Build PROD (staging hidden by default)
-docker buildx build \
+docker buildx build \ 
 	--platform linux/amd64 \
 	-t ${IMAGE_LOCAL}:prod \
 	. --load

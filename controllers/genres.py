@@ -1,29 +1,25 @@
 import json
 import logging
-from datetime import date
 
 from fastapi import HTTPException
 
-from models.books import Books
+from models.genres import Genres
 from utils.database import execute_query_json
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)    
 
-async def get_one(id_book: int) -> Books:
+async def get_one(id_genres: int) -> Genres:
     sqlscript = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE id_book = ?;
+    SELECT [id_genres],
+        [name_genre],
+        [description]       
+    FROM [library].[genres]
+    WHERE id_genres = ?;
     """
     
-    params = [id_book]
+    params = [id_genres]
 
     result_dict = []
 
@@ -35,22 +31,18 @@ async def get_one(id_book: int) -> Books:
         if len(result_dict) > 0:
             return result_dict[0]
         else:
-            raise HTTPException(status_code=404, detail="Book not found")
+            raise HTTPException(status_code=404, detail="Genre not found")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
 
-async def get_all() -> list[Books]:
+async def get_all() -> list[Genres]:
     selectscript = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books];    
-
+    SELECT [id_genres],
+        [name_genre],
+        [description]
+    FROM [library].[genres];
  """ 
     result_dict = []
     try:
@@ -60,34 +52,34 @@ async def get_all() -> list[Books]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def delete_books(id_book: int) -> str:
+async def delete_genres(id_genres: int) -> str:
     deletescript = """
-    DELETE FROM [library].[books]
-    WHERE id_book = ?;
+    DELETE FROM [library].[genres]
+    WHERE id_genres = ?;
     """
-    params = [id_book]
+    params = [id_genres]
 
     try:
         await execute_query_json(deletescript, params = params, needs_commit=True)
-        return "Book deleted successfully."
+        return "Genre deleted successfully."
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def update_books(authors: Books) -> Books:
+async def update_genres(genres: Genres) -> Genres:
     
-    dict = Books.model_dump(exclude_none=True)
+    dict = Genres.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove("id_book")
+    keys.remove("id_genres")
     vaiables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
-    UPDATE [library].[books]
+    UPDATE [library].[genres]
     SET {vaiables}
-    WHERE id_book = ?;
+    WHERE id_genres = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(Books.id_book)
+    params.append(genres.id_genres)
 
     update_result = None
     try:
@@ -95,16 +87,13 @@ async def update_books(authors: Books) -> Books:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE id_book = ?
+    SELECT [id_genres],
+        [name_genre],
+        [description]
+    FROM [library].[genres]
+    WHERE id_genres = ?;
     """
-    params = [Books.title]
+    params = [Genres.name_genre]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -119,17 +108,14 @@ async def update_books(authors: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-async def create_books(books: Books) -> Books:
+async def create_genres(genres: Genres) -> Genres:
     sqlscript = """
-    INSERT INTO [library].[books] ([id_genre], [title], [isbn], [date_publication], [its_active] )
+    INSERT INTO [library].[customer] ([first_name], [last_name], [email], [phone_number], [its_active] )
     VALUES (?, ?, ?, ?, ?);
     """
     params = [
-        books.id_genre,
-        books.title,
-        books.isbn,
-        books.date_publication,
-        books.its_active
+        genres.name_genre,
+        genres.description
     ]
 
     insert_result = None
@@ -139,18 +125,15 @@ async def create_books(books: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_book],
-        [id_genre],
-        [title],
-        [isbn],
-        [date_publication],
-        [its_active]
-    FROM [library].[books]
-    WHERE isbn = ?
+    SELECT [id_genres],
+        [name_genre],
+        [description]
+    FROM [library].[genres]
+    WHERE name_genre = ?;
 
     """
     
-    params = [books.isbn]
+    params = [genres.name_genre]
 
     result_dict = []
 
@@ -164,4 +147,4 @@ async def create_books(books: Books) -> Books:
         else:
             return []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")    
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")   

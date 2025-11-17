@@ -14,25 +14,20 @@ class Loan(BaseModel):
         description="El ID del cliente que realiza el préstamo",
     )
 
-    id_book: Optional[int] = Field(
-        default=None,
-        description="El ID del libro que se presta"
-    )
-
     date_loan: Optional[date] = Field(
         default=None,
         description="La fecha en que se realiza el préstamo",
         examples=["2023-10-15","2022-05-20"]
     )
 
-    date_return: Optional[date] = Field(
+    date_devolution: Optional[date] = Field(
         default=None,
         description="La fecha en que se devuelve el libro",
         examples=["2023-11-15","2022-06-20"]
     )
 
-    loan_status: Optional[bool] = Field(
-        default=None,
+    loan_active: Optional[bool] = Field(
+        default=True,
         description="El estado del préstamo",
         pattern=r"^(activo|devuelto|retrasado)$",
         examples=["activo","devuelto"]
