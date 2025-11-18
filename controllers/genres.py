@@ -52,12 +52,12 @@ async def get_all() -> list[Genres]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def delete_genres(id_genres: int) -> str:
+async def delete_genres(id_genre: int) -> str:
     deletescript = """
     DELETE FROM [library].[genres]
     WHERE id_genre = ?;
     """
-    params = [id_genres]
+    params = [id_genre]
 
     try:
         await execute_query_json(deletescript, params = params, needs_commit=True)
@@ -65,24 +65,24 @@ async def delete_genres(id_genres: int) -> str:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def update_genres(genres: Genres) -> Genres:
+async def update_genres( genres: Genres) -> Genres:
     
-    dict = Genres.model_dump(exclude_none=True)
+    dict = genres.model_dump(exclude_none=True)
 
-    keys = [k for k in dict.keys()]
-    keys.remove("id_genre")
-    vaiables = " = ?, ".join(keys) + " = ?"
+    keys = [ k for k in dict.keys() ]
+    keys.remove('id_genres')
+    variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[genres]
-    SET {vaiables}
-    WHERE id_genre = ?;
+    SET {variables}
+    WHERE [id_genre] = ?;
     """
 
     params = [dict[v] for v in keys]
-    params.append(genres.id_genre)
-    update_result = None
+    params.append( genres.id_genres )
 
+    update_result = None
     try:
         update_result = await execute_query_json(updatescript, params, needs_commit=True)
     except Exception as e:
@@ -96,9 +96,9 @@ async def update_genres(genres: Genres) -> Genres:
     WHERE id_genre = ?;
     """
 
-    params = [Genres.name_genre]
-    result_dict = []
+    params = [genres.id_genres]
 
+    result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
         result_dict = json.loads(result)
@@ -117,7 +117,7 @@ async def create_genres(genres: Genres) -> Genres:
     VALUES (?, ?);
     """
     params = [
-        genres.name_genre,
+        genres.name_genres,
         genres.description
     ]
 
@@ -136,7 +136,7 @@ async def create_genres(genres: Genres) -> Genres:
 
     """
     
-    params = [genres.name_genre]
+    params = [genres.name_genres]
 
     result_dict = []
 

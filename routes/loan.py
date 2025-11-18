@@ -67,7 +67,7 @@ async def update_book_of_loan( id_loan: int, id_book: int, book_data: Loan_Books
     result = await update_book_info(book_data)
     return result
 
-@router.delete("/{id_loan}/books/{id_book}", tags=["loans"], status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id_loan}/books/{id_book}", tags=["loan"], status_code=status.HTTP_204_NO_CONTENT)
 async def remove_book_from_loan_id( id_loan: int, id_book: int ):
     status: str =  await remove_book_from_loan(id_loan, id_book)
     return status

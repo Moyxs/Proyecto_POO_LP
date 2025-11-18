@@ -8,7 +8,7 @@ class Genres(BaseModel):
         description="El ID autoincrementable del género del libro"
         )
     
-    name_genre: Optional[str] = Field(
+    name_genres: Optional[str] = Field(
         default=None,
         description="El nombre del género del libro",
         pattern=r"^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$",
