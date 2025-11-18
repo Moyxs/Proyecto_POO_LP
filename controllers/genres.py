@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 async def get_one(id_genres: int) -> Genres:
     sqlscript = """
-    SELECT [id_genres],
-        [name_genre],
+    SELECT [id_genre],
+        [name_genres],
         [description]       
     FROM [library].[genres]
-    WHERE id_genres = ?;
+    WHERE id_genre = ?;
     """
     
     params = [id_genres]
@@ -39,8 +39,8 @@ async def get_one(id_genres: int) -> Genres:
 
 async def get_all() -> list[Genres]:
     selectscript = """
-    SELECT [id_genres],
-        [name_genre],
+    SELECT [id_genre],
+        [name_genres],
         [description]
     FROM [library].[genres];
  """ 
@@ -55,7 +55,7 @@ async def get_all() -> list[Genres]:
 async def delete_genres(id_genres: int) -> str:
     deletescript = """
     DELETE FROM [library].[genres]
-    WHERE id_genres = ?;
+    WHERE id_genre = ?;
     """
     params = [id_genres]
 
@@ -69,36 +69,39 @@ async def update_genres(genres: Genres) -> Genres:
     
     dict = Genres.model_dump(exclude_none=True)
 
-    keys = [k for k in dict.keys() ]
-    keys.remove("id_genres")
+    keys = [k for k in dict.keys()]
+    keys.remove("id_genre")
     vaiables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[genres]
     SET {vaiables}
-    WHERE id_genres = ?;
+    WHERE id_genre = ?;
     """
-    params = [dict[v] for v in keys]
-    params.append(genres.id_genres)
 
+    params = [dict[v] for v in keys]
+    params.append(genres.id_genre)
     update_result = None
+
     try:
         update_result = await execute_query_json(updatescript, params, needs_commit=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     sqlfind = """
-    SELECT [id_genres],
-        [name_genre],
-        [description]
+    SELECT [id_genre],
+           [name_genres],
+           [description]
     FROM [library].[genres]
-    WHERE id_genres = ?;
+    WHERE id_genre = ?;
     """
+
     params = [Genres.name_genre]
     result_dict = []
+
     try:
         result = await execute_query_json(sqlfind, params=params)
         result_dict = json.loads(result)
-
 
         if len(result_dict) > 0:
             return result_dict[0]
@@ -110,8 +113,8 @@ async def update_genres(genres: Genres) -> Genres:
 
 async def create_genres(genres: Genres) -> Genres:
     sqlscript = """
-    INSERT INTO [library].[customer] ([first_name], [last_name], [email], [phone_number], [its_active] )
-    VALUES (?, ?, ?, ?, ?);
+    INSERT INTO [library].[genres] ([name_genres], [description])
+    VALUES (?, ?);
     """
     params = [
         genres.name_genre,
@@ -125,11 +128,11 @@ async def create_genres(genres: Genres) -> Genres:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_genres],
-        [name_genre],
+    SELECT [id_genre],
+        [name_genres],
         [description]
     FROM [library].[genres]
-    WHERE name_genre = ?;
+    WHERE name_genres = ?;
 
     """
     

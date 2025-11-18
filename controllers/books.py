@@ -48,7 +48,7 @@ async def get_all() -> list[Books]:
         [id_genre],
         [title],
         [isbn],
-        [date_publication],
+        [date_published],
         [its_active]
     FROM [library].[books];    
 

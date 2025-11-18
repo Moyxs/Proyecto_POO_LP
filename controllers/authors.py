@@ -155,8 +155,8 @@ async def get_all_books(id_author: int) -> list[Author_book]:
         SELECT
             ab.id_book
             , b.title
-            , ab.date_published
-        FROM library.author_books ab
+            , b.date_published
+        FROM library.authors_books ab
         inner join library.books b
         on ab.id_book =b.id_book
         WHERE ab.id_author = ?
@@ -183,7 +183,7 @@ async def get_one_book(id_author: int, id_book: int) -> Author_book:
             , b.isbn
             , b.its_active
         FROM library.books b
-        inner join library.author_books ab 
+        inner join library.authors_books ab 
         on b.id_book = ab.id_book
         WHERE ab.id_author = ?
         and b.id_book = ?;
@@ -227,7 +227,7 @@ async def add_book_to_author(id_author: int, id_book: int) -> Author_book:
             , b.isbn
             , b.its_active
         FROM library.books b
-        inner join library.author_books ab 
+        inner join library.authors_books ab 
         on b.id_book = ab.id_book
         WHERE b.id_book = ?
         and ab.id_author = ?;

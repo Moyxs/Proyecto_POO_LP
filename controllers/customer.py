@@ -119,16 +119,15 @@ async def update_customer(customer: Customer) -> Customer:
 
 async def create_customer(customer: Customer) -> Customer:
     sqlscript = """
-    INSERT INTO [library].[customer] ([first_name], [last_name], [email], [phone_number], [its_active] )
-    VALUES ( ?, ?, ?, ?, ? );
+    INSERT INTO [library].[customers] ([first_name], [last_name], [age], [email] )
+    VALUES ( ?, ?, ?, ? );
 
     """
     params = [
         customer.first_name,
         customer.last_name,
-        customer.email,
-        customer.phone_number,
-        customer.its_active 
+        customer.age,
+        customer.email
     ]
 
     insert_result = None
@@ -141,10 +140,9 @@ async def create_customer(customer: Customer) -> Customer:
     SELECT [id_customer],
         [first_name],
         [last_name],
-        [email],
-        [phone_number],
-        [its_active]
-    FROM [library].[customer]
+        [age],
+        [email]
+    FROM [library].[customers]
     WHERE email = ?;
 
     """
