@@ -15,10 +15,9 @@ async def get_one(id_customer: int) -> Customer:
     SELECT [id_customer],
         [first_name],
         [last_name],
-        [email],
-        [phone_number],
-        [its_active]
-    FROM [library].[customer]
+        [age],
+        [email]
+    FROM [library].[customers]
     WHERE id_customer = ?;
     """
     
@@ -45,10 +44,9 @@ async def get_all() -> list[Customer]:
     SELECT [id_customer],
         [first_name],
         [last_name],
-        [email],
-        [phone_number],
-        [its_active]
-    FROM [library].[customer];
+        [age],
+        [email]
+    FROM [library].[customers];
  """ 
     result_dict = []
     try:
@@ -60,7 +58,7 @@ async def get_all() -> list[Customer]:
     
 async def delete_customer(id_customer: int) -> str:
     deletescript = """
-    DELETE FROM [library].[customer]
+    DELETE FROM [library].[customers]
     WHERE id_customer = ?;
     """
     params = [id_customer]
@@ -73,19 +71,19 @@ async def delete_customer(id_customer: int) -> str:
     
 async def update_customer(customer: Customer) -> Customer:
     
-    dict = Customer.model_dump(exclude_none=True)
+    dict = customer.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove("id_customer")
-    vaiables = " = ?, ".join(keys) + " = ?"
+    keys.remove('id_customer')
+    variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
-    UPDATE [library].[customer]
-    SET {vaiables}
+    UPDATE [library].[customers]
+    SET {variables}
     WHERE id_customer = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(Customer.id_customer)
+    params.append(customer.id_customer)
 
     update_result = None
     try:
@@ -96,13 +94,12 @@ async def update_customer(customer: Customer) -> Customer:
     SELECT [id_customer],
         [first_name],
         [last_name],
-        [email],
-        [phone_number],
-        [its_active]
-    FROM [library].[customer]
-    WHERE email = ?
+        [age],
+        [email]
+    FROM [library].[customers]
+    WHERE id_customer = ?
     """
-    params = [Customer.title]
+    params = [customer.id_customer]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)

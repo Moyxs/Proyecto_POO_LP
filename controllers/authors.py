@@ -92,9 +92,9 @@ async def update_author(authors: Author) -> Author:
     [first_name], 
     [last_name]
     FROM [library].[authors]
-    WHERE first_name = ? 
+    WHERE id_author = ? 
     """
-    params = [authors.first_name]
+    params = [authors.id_author]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -233,7 +233,7 @@ async def add_book_to_author(id_author: int, id_book: int) -> Author_book:
         and ab.id_author = ?;
     """
 
-    params = [id_author, id_book]
+    params = [id_book, id_author]
 
     try:
         result = await execute_query_json(select_script, params=params)
