@@ -16,10 +16,10 @@ async def get_one(id_book: int) -> Books:
     sqlscript = """
     SELECT [id_book],
         [id_genre],
-        [title],
         [isbn],
-        [date_publication],
-        [its_active]
+        [title],
+        [its_active],
+        [date_published]
     FROM [library].[books]
     WHERE id_book = ?;
     """
@@ -74,21 +74,21 @@ async def delete_books(id_book: int) -> str:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def update_books(authors: Books) -> Books:
+async def update_books(books: Books) -> Books:
     
-    dict = Books.model_dump(exclude_none=True)
+    dict = books.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove("id_book")
-    vaiables = " = ?, ".join(keys) + " = ?"
+    keys.remove('id_book')
+    variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[books]
-    SET {vaiables}
+    SET {variables}
     WHERE id_book = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(Books.id_book)
+    params.append(books.id_book)
 
     update_result = None
     try:
@@ -98,14 +98,14 @@ async def update_books(authors: Books) -> Books:
     sqlfind = """
     SELECT [id_book],
         [id_genre],
-        [title],
         [isbn],
-        [date_publication],
-        [its_active]
+        [title],
+        [its_active],
+        [date_published]
     FROM [library].[books]
     WHERE id_book = ?
     """
-    params = [Books.title]
+    params = [books.id_book]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -122,15 +122,15 @@ async def update_books(authors: Books) -> Books:
 
 async def create_books(books: Books) -> Books:
     sqlscript = """
-    INSERT INTO [library].[books] ([id_genre], [title], [isbn], [date_publication], [its_active] )
+    INSERT INTO [library].[books] ([id_genre], [isbn], [title], [its_active], [date_published])
     VALUES (?, ?, ?, ?, ?);
     """
     params = [
         books.id_genre,
-        books.title,
         books.isbn,
-        books.date_publication,
-        books.its_active
+        books.title,
+        books.its_active,
+        books.date_published
     ]
 
     insert_result = None
@@ -142,10 +142,10 @@ async def create_books(books: Books) -> Books:
     sqlfind = """
     SELECT [id_book],
         [id_genre],
-        [title],
         [isbn],
-        [date_publication],
-        [its_active]
+        [title],
+        [its_active],
+        [date_published]
     FROM [library].[books]
     WHERE isbn = ?
 
