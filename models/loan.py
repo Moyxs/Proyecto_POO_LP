@@ -4,7 +4,7 @@ from datetime import date
 import re
 
 class Loan(BaseModel):
-    id_Loan: Optional[int] = Field(
+    id_loan: Optional[int] = Field(
         default=None,
         description="El ID autoincrementable del préstamo"
         )
@@ -28,7 +28,6 @@ class Loan(BaseModel):
 
     loan_active: Optional[bool] = Field(
         default=True,
-        description="El estado del préstamo",
-        pattern=r"^(activo|devuelto|retrasado)$",
-        examples=["activo","devuelto"]
+        description="Indica si el prestamo esta activo o no",
+        examples=["true","false"]
     )

@@ -46,8 +46,8 @@ async def get_one_loan(id_loan: int):
 
 ## LOANS WITH BOOKS INTERACTION FUNCTIONS ##
 @router.get("/{id_loan}/books", tags=["loan"], status_code=status.HTTP_200_OK)
-async def get_all_books_of_loan( id_author: int ):
-    result = await get_all_books(id_author)
+async def get_all_books_of_loan( id_loan: int ):
+    result = await get_all_books(id_loan)
     return result
 
 @router.get("/{id_loan}/books/{id_book}", tags=["loan"], status_code=status.HTTP_200_OK)

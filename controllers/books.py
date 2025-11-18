@@ -168,25 +168,27 @@ async def create_books(books: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")  
 
 ## BOOKS WITH AUTHORS INTERACTION FUNCTIONS ##
-async def get_all_authors(id_book: int) -> list[Author_book]:
+
+async def get_all_authors(id_book : int ) -> list[Author_book]:
     select_script = """
         SELECT
             ab.id_author
             , a.first_name
             , a.last_name
-            , ab.date_published
-        FROM library.author_books ab
+            , b.date_published
+        FROM library.authors_books ab
         inner join library.authors a
         on ab.id_author = a.id_author
         inner join library.books b
-        on ab.id_book =b.id_book
-        WHERE ab.id_author = ?
+        on ab.id_book = b.id_book
+        WHERE ab.id_book = ?
     """
 
     params = [id_book]
 
     try:
         result = await execute_query_json(select_script, params=params)
+        print("Raw result:", result)
         dict_result = json.loads(result)
         if len(dict_result) == 0:
             raise HTTPException(status_code=404, detail="No authors found for the book")
@@ -201,7 +203,7 @@ async def get_all_loans(id_book: int) -> list[Loan_Books]:
     select_script = """
         SELECT
             l.id_loan
-            , l.id_customers
+            , l.id_customer
             , lb.return_status
             , l.loan_active
             , l.date_loan

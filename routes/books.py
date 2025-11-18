@@ -42,13 +42,13 @@ async def get_one_book(id_book: int):
 
 
 ## BOOKS WITH AUTHORS INTERACTION FUNCTIONS ##
-@router.get("{id_book}/authors", tags=["books"], status_code=status.HTTP_200_OK)
+@router.get("/{id_book}/authors", tags=["books"], status_code=status.HTTP_200_OK)
 async def get_all_authors_from_book( id_book: int ):
     result = await get_all_authors(id_book)
     return result
 
 ## BOOKS WITH LOANS INTERACTION FUNCTIONS ##
-@router.get("{id_book}/loans", tags=["books"], status_code=status.HTTP_200_OK)
+@router.get("/{id_book}/loans", tags=["books"], status_code=status.HTTP_200_OK)
 async def get_all_loans_from_book( id_book: int ):
     result = await get_all_loans(id_book)
     return result
