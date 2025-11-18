@@ -217,7 +217,24 @@ async def get_one_book(id_loan: int, id_book: int) -> Loan_Books:
         raise HTTPException(status_code=404, detail=f"Database error: { str(e) }")
     
 async def add_book_to_loan(id_loan: int, id_book: int) -> Loan_Books:
+    
+    check_script = """
+        SELECT COUNT(*) AS active_count
+        FROM library.loan_books lb
+        INNER JOIN library.loans l ON lb.id_loan = l.id_loan
+        WHERE lb.id_book = ? AND l.loan_active = 1;
+    """
+    check_params = [id_book]
 
+    try:
+        check_result = await execute_query_json(check_script, params=check_params)
+        active_count = json.loads(check_result)[0]["active_count"]
+
+        if active_count > 0:
+            raise HTTPException(status_code=409, detail="El libro ya está en un préstamo activo.")
+    except Exception as e:
+        raise HTTPException(status_code=409, detail=f"Error al validar disponibilidad del libro: {str(e)}")
+    
     insert_script = """
         INSERT INTO [library].[loan_books] ([id_loan], [id_book])
         VALUES (?, ?);
