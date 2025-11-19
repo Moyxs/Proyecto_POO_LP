@@ -9,12 +9,12 @@ from routes.loan import router as loan_router
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {
-        "Hello": "World",
-        "version": "0.1.0"
-    }
+#@app.get("/")
+#def read_root():
+#    return {
+#        "Hello": "World",
+#        "version": "0.1.0"
+#    }
 
 app.include_router(authors_router)
 app.include_router(books_router)
