@@ -30,7 +30,7 @@ async def create_new_loan(loan_data: Loan):
 
 @router.put("/", tags=["Loan"], status_code=status.HTTP_201_CREATED)
 async def update_loan_information(loan_data: Loan, id_loan: int):
-    loan_data.id_loan = id_loan
+    loan_data.id = id_loan
     result = await update_loan(loan_data)
     return result
 

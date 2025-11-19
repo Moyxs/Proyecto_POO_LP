@@ -11,16 +11,16 @@ from utils.database import execute_query_json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)    
 
-async def get_one(id_author: int) -> Author:
+async def get_one(id: int) -> Author:
     sqlscript = """
-    SELECT [id_author], 
+    SELECT [id], 
     [first_name], 
     [last_name]
     FROM [library].[authors]
-    WHERE id_author = ? 
+    WHERE id = ? 
     """
     
-    params = [id_author]
+    params = [id]
 
     result_dict = []
 
@@ -40,7 +40,7 @@ async def get_one(id_author: int) -> Author:
 
 async def get_all() -> list[Author]:
     selectscript = """
-     SELECT [id_author],
+     SELECT [id],
         [first_name], 
          [last_name]
          FROM [library].[authors]
@@ -56,9 +56,9 @@ async def get_all() -> list[Author]:
 async def delete_author(id_author: int) -> str:
     deletescript = """
     DELETE FROM [library].[authors]
-    WHERE id_author = ?;
+    WHERE id = ?;
     """
-    params = [id_author]
+    params = [id]
 
     try:
         await execute_query_json(deletescript, params = params, needs_commit=True)
@@ -71,16 +71,16 @@ async def update_author(authors: Author) -> Author:
     dict = authors.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove("id_author")
+    keys.remove("id")
     vaiables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[authors]
     SET {vaiables}
-    WHERE id_author = ?;
+    WHERE id = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(authors.id_author)
+    params.append(authors.id)
 
     update_result = None
     try:
@@ -88,13 +88,13 @@ async def update_author(authors: Author) -> Author:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_author],
+    SELECT [id],
     [first_name], 
     [last_name]
     FROM [library].[authors]
-    WHERE id_author = ? 
+    WHERE id = ? 
     """
-    params = [authors.id_author]
+    params = [authors.id]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -126,7 +126,7 @@ async def create_author(authors: Author) -> Author:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_author], 
+    SELECT [id], 
     [first_name], 
     [last_name]
     FROM [library].[authors]
@@ -158,7 +158,7 @@ async def get_all_books(id_author: int) -> list[Author_book]:
             , b.date_published
         FROM library.authors_books ab
         inner join library.books b
-        on ab.id_book =b.id_book
+        on ab.id_book =b.id
         WHERE ab.id_author = ?
     """
 
@@ -184,9 +184,9 @@ async def get_one_book(id_author: int, id_book: int) -> Author_book:
             , b.its_active
         FROM library.books b
         inner join library.authors_books ab 
-        on b.id_book = ab.id_book
+        on b.id = ab.id_book
         WHERE ab.id_author = ?
-        and b.id_book = ?;
+        and b.id = ?;
     """
 
     params = [id_author, id_book]
@@ -220,7 +220,7 @@ async def add_book_to_author(id_author: int, id_book: int) -> Author_book:
 
     select_script = """
         SELECT
-            b.id_book
+            b.id
             , b.id_genre
             , b.title
             , b.date_published
@@ -228,8 +228,8 @@ async def add_book_to_author(id_author: int, id_book: int) -> Author_book:
             , b.its_active
         FROM library.books b
         inner join library.authors_books ab 
-        on b.id_book = ab.id_book
-        WHERE b.id_book = ?
+        on b.id = ab.id_book
+        WHERE b.id = ?
         and ab.id_author = ?;
     """
 

@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 
 async def get_one(id_customer: int) -> Customer:
     sqlscript = """
-    SELECT [id_customer],
+    SELECT [id],
         [first_name],
         [last_name],
         [age],
         [email]
     FROM [library].[customers]
-    WHERE id_customer = ?;
+    WHERE id = ?;
     """
     
     params = [id_customer]
@@ -41,7 +41,7 @@ async def get_one(id_customer: int) -> Customer:
 
 async def get_all() -> list[Customer]:
     selectscript = """
-    SELECT [id_customer],
+    SELECT [id],
         [first_name],
         [last_name],
         [age],
@@ -59,7 +59,7 @@ async def get_all() -> list[Customer]:
 async def delete_customer(id_customer: int) -> str:
     deletescript = """
     DELETE FROM [library].[customers]
-    WHERE id_customer = ?;
+    WHERE id = ?;
     """
     params = [id_customer]
 
@@ -74,16 +74,16 @@ async def update_customer(customer: Customer) -> Customer:
     dict = customer.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove('id_customer')
+    keys.remove('id')
     variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[customers]
     SET {variables}
-    WHERE id_customer = ?;
+    WHERE id = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(customer.id_customer)
+    params.append(customer.id)
 
     update_result = None
     try:
@@ -91,15 +91,15 @@ async def update_customer(customer: Customer) -> Customer:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_customer],
+    SELECT [id],
         [first_name],
         [last_name],
         [age],
         [email]
     FROM [library].[customers]
-    WHERE id_customer = ?
+    WHERE id = ?
     """
-    params = [customer.id_customer]
+    params = [customer.id]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -134,7 +134,7 @@ async def create_customer(customer: Customer) -> Customer:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_customer],
+    SELECT [id],
         [first_name],
         [last_name],
         [age],

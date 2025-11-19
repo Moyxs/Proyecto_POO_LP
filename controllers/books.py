@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 
 async def get_one(id_book: int) -> Books:
     sqlscript = """
-    SELECT [id_book],
+    SELECT [id],
         [id_genre],
         [isbn],
         [title],
         [its_active],
         [date_published]
     FROM [library].[books]
-    WHERE id_book = ?;
+    WHERE idk = ?;
     """
     
     params = [id_book]
@@ -44,7 +44,7 @@ async def get_one(id_book: int) -> Books:
 
 async def get_all() -> list[Books]:
     selectscript = """
-    SELECT [id_book],
+    SELECT [id],
         [id_genre],
         [title],
         [isbn],
@@ -64,7 +64,7 @@ async def get_all() -> list[Books]:
 async def delete_books(id_book: int) -> str:
     deletescript = """
     DELETE FROM [library].[books]
-    WHERE id_book = ?;
+    WHERE id = ?;
     """
     params = [id_book]
 
@@ -79,16 +79,16 @@ async def update_books(books: Books) -> Books:
     dict = books.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove('id_book')
+    keys.remove('id')
     variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[books]
     SET {variables}
-    WHERE id_book = ?;
+    WHERE id = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(books.id_book)
+    params.append(books.id)
 
     update_result = None
     try:
@@ -96,16 +96,16 @@ async def update_books(books: Books) -> Books:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_book],
+    SELECT [id],
         [id_genre],
         [isbn],
         [title],
         [its_active],
         [date_published]
     FROM [library].[books]
-    WHERE id_book = ?
+    WHERE id = ?
     """
-    params = [books.id_book]
+    params = [books.id]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -140,7 +140,7 @@ async def create_books(books: Books) -> Books:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_book],
+    SELECT [id],
         [id_genre],
         [isbn],
         [title],
@@ -178,9 +178,9 @@ async def get_all_authors(id_book : int ) -> list[Author_book]:
             , b.date_published
         FROM library.authors_books ab
         inner join library.authors a
-        on ab.id_author = a.id_author
+        on ab.id_author = a.id
         inner join library.books b
-        on ab.id_book = b.id_book
+        on ab.id_book = b.id
         WHERE ab.id_book = ?
     """
 
@@ -202,7 +202,7 @@ async def get_all_authors(id_book : int ) -> list[Author_book]:
 async def get_all_loans(id_book: int) -> list[Loan_Books]:
     select_script = """
         SELECT
-            l.id_loan
+            l.id
             , l.id_customer
             , lb.return_status
             , l.loan_active
@@ -210,7 +210,7 @@ async def get_all_loans(id_book: int) -> list[Loan_Books]:
             , l.date_devolution
         FROM library.loans l
         inner join library.loan_books lb
-        on l.id_loan = lb.id_loan
+        on l.id = lb.id_loan
         WHERE lb.id_book = ?
     """
 

@@ -26,7 +26,7 @@ async def create_new_book(book_data: Books):
 
 @router.put("/", tags=["Books"], status_code=status.HTTP_201_CREATED)
 async def update_book_information(book_data: Books, id_book: int):
-    book_data.id_book = id_book
+    book_data.id = id_book
     result = await update_books(book_data)
     return result
 

@@ -3,7 +3,7 @@ from typing import Optional
 import re
 
 class Author(BaseModel):
-    id_author: Optional[int] = Field(
+    id: Optional[int] = Field(
         default=None,
         description="El ID autoincrementable del autor"
         )

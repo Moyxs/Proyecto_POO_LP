@@ -26,7 +26,7 @@ async def create_new_genres(genres_data: Genres):
 
 @router.put("/", tags=["Genres"], status_code=status.HTTP_201_CREATED)
 async def update_genres_information(genres_data: Genres, id_genres: int):
-    genres_data.id_genres = id_genres
+    genres_data.id = id_genres
     result = await update_genres(genres_data)
     return result
 

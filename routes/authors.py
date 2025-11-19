@@ -30,7 +30,7 @@ async def create_new_author(author_data: Author):
 
 @router.put("/", tags=["Authors"], status_code=status.HTTP_201_CREATED)
 async def update_author_information(author_data: Author, id_author: int):
-    author_data.id_author = id_author
+    author_data.id = id_author
     result = await update_author(author_data)
     return result
 

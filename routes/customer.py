@@ -25,7 +25,7 @@ async def create_new_customer(customer_data: Customer):
 
 @router.put("/", tags=["Customers"], status_code=status.HTTP_201_CREATED)
 async def update_customer_information(customer_data: Customer, id_customer: int):
-    customer_data.id_customer = id_customer
+    customer_data.id = id_customer
     result = await update_customer(customer_data)
     return result
 

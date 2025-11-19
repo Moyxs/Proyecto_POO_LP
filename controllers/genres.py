@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 async def get_one(id_genres: int) -> Genres:
     sqlscript = """
-    SELECT [id_genre],
-        [name_genres],
+    SELECT [id],
+        [name_genre],
         [description]       
     FROM [library].[genres]
-    WHERE id_genre = ?;
+    WHERE id = ?;
     """
     
     params = [id_genres]
@@ -39,8 +39,8 @@ async def get_one(id_genres: int) -> Genres:
 
 async def get_all() -> list[Genres]:
     selectscript = """
-    SELECT [id_genre],
-        [name_genres],
+    SELECT [id],
+        [name_genre],
         [description]
     FROM [library].[genres];
  """ 
@@ -55,7 +55,7 @@ async def get_all() -> list[Genres]:
 async def delete_genres(id_genre: int) -> str:
     deletescript = """
     DELETE FROM [library].[genres]
-    WHERE id_genre = ?;
+    WHERE id = ?;
     """
     params = [id_genre]
 
@@ -70,17 +70,17 @@ async def update_genres( genres: Genres) -> Genres:
     dict = genres.model_dump(exclude_none=True)
 
     keys = [ k for k in dict.keys() ]
-    keys.remove('id_genres')
+    keys.remove('id')
     variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[genres]
     SET {variables}
-    WHERE [id_genre] = ?;
+    WHERE [id] = ?;
     """
 
     params = [dict[v] for v in keys]
-    params.append( genres.id_genres )
+    params.append( genres.id )
 
     update_result = None
     try:
@@ -89,14 +89,14 @@ async def update_genres( genres: Genres) -> Genres:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     sqlfind = """
-    SELECT [id_genre],
-           [name_genres],
+    SELECT [id],
+           [name_genre],
            [description]
     FROM [library].[genres]
-    WHERE id_genre = ?;
+    WHERE id = ?;
     """
 
-    params = [genres.id_genres]
+    params = [genres.id]
 
     result_dict = []
     try:
@@ -113,11 +113,11 @@ async def update_genres( genres: Genres) -> Genres:
 
 async def create_genres(genres: Genres) -> Genres:
     sqlscript = """
-    INSERT INTO [library].[genres] ([name_genres], [description])
+    INSERT INTO [library].[genres] ([name_genre], [description])
     VALUES (?, ?);
     """
     params = [
-        genres.name_genres,
+        genres.name_genre,
         genres.description
     ]
 
@@ -128,15 +128,15 @@ async def create_genres(genres: Genres) -> Genres:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_genre],
-        [name_genres],
+    SELECT [id],
+        [name_genre],
         [description]
     FROM [library].[genres]
-    WHERE name_genres = ?;
+    WHERE name_genre = ?;
 
     """
     
-    params = [genres.name_genres]
+    params = [genres.name_genre]
 
     result_dict = []
 

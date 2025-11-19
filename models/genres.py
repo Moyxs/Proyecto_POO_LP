@@ -3,12 +3,12 @@ from typing import Optional
 import re
 
 class Genres(BaseModel):
-    id_genres: Optional[int] = Field(
+    id: Optional[int] = Field(
         default=None,
         description="El ID autoincrementable del género del libro"
         )
     
-    name_genres: Optional[str] = Field(
+    name_genre: Optional[str] = Field(
         default=None,
         description="El nombre del género del libro",
         pattern=r"^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$",
