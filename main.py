@@ -12,8 +12,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {
-        "Hello": "World",
-        "version": "0.1.0"
+        "version": "1.1.0"
     }
 
 app.include_router(authors_router)
