@@ -209,7 +209,7 @@ async def get_all_loans(id_book: int) -> list[Loan_Books]:
             , l.date_loan
             , l.date_devolution
         FROM library.loans l
-        inner join library.loan_books lb
+        inner join library.loans_books lb
         on l.id = lb.id_loan
         WHERE lb.id_book = ?
     """

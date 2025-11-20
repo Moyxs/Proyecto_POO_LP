@@ -53,7 +53,7 @@ async def get_all() -> list[Author]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-async def delete_author(id_author: int) -> str:
+async def delete_author(id: int) -> str:
     deletescript = """
     DELETE FROM [library].[authors]
     WHERE id = ?;
