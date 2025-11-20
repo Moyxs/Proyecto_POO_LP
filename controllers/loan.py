@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 
 async def get_one(id_loan: int) -> Loan:
     sqlscript = """
-    SELECT [id_loan],
+    SELECT [id],
         [id_customer],
         [date_loan],
         [date_devolution],
         [loan_active]
     FROM [library].[loans]
-    WHERE id_loan = ?;
+    WHERE id = ?;
     """
     
     params = [id_loan]
@@ -41,7 +41,7 @@ async def get_one(id_loan: int) -> Loan:
 
 async def get_all() -> list[Loan]:
     selectscript = """
-    SELECT [id_loan],
+    SELECT [id],
         [id_customer],
         [date_loan],
         [date_devolution],
@@ -59,7 +59,7 @@ async def get_all() -> list[Loan]:
 async def delete_loan(id_loan: int) -> str:
     deletescript = """
     DELETE FROM [library].[loans]
-    WHERE id_loan = ?;
+    WHERE id = ?;
     """
     params = [id_loan]
 
@@ -74,16 +74,16 @@ async def update_loan(loan: Loan) -> Loan:
     dict = loan.model_dump(exclude_none=True)
 
     keys = [k for k in dict.keys() ]
-    keys.remove('id_loan')
+    keys.remove('id')
     variables = " = ?, ".join(keys) + " = ?"
 
     updatescript = f"""
     UPDATE [library].[loans]
     SET {variables}
-    WHERE id_loan = ?;
+    WHERE id = ?;
     """
     params = [dict[v] for v in keys]
-    params.append(loan.id_loan)
+    params.append(loan.id)
 
     update_result = None
     try:
@@ -91,15 +91,15 @@ async def update_loan(loan: Loan) -> Loan:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     sqlfind = """
-    SELECT [id_loan],
+    SELECT [id],
         [id_customer],
         [date_loan],
         [date_devolution],
         [loan_active]
     FROM [library].[loans]
-    WHERE id_loan = ?;
+    WHERE id = ?;
     """
-    params = [loan.id_loan]
+    params = [loan.id]
     result_dict = []
     try:
         result = await execute_query_json(sqlfind, params=params)
@@ -117,6 +117,7 @@ async def update_loan(loan: Loan) -> Loan:
 async def create_loan(loan: Loan) -> Loan:
     sqlscript = """
     INSERT INTO [library].[loans] ([id_customer], [date_loan], [date_devolution], [loan_active] )
+    OUTPUT INSERTED.id
     VALUES (?, ?, ?, ?);
 
     """
@@ -127,20 +128,21 @@ async def create_loan(loan: Loan) -> Loan:
         loan.loan_active
     ]
 
-    insert_result = None
+    
     try:
         insert_result = await execute_query_json(sqlscript, params, needs_commit=True)
+        new_id = json.loads(insert_result)[0]["id"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     sqlfind = """
-    SELECT [id_loan],
+    SELECT [id],
         [id_customer],
         [date_loan],
         [date_devolution],
         [loan_active]
     FROM [library].[loans]
-    WHERE id_customer = ?;
+    WHERE id = ?;
     """
     
     params = [loan.id_customer]
@@ -148,14 +150,9 @@ async def create_loan(loan: Loan) -> Loan:
     result_dict = []
 
     try:
-        result = await execute_query_json(sqlfind, params=params)
+        result = await execute_query_json(sqlfind, params=[new_id])
         result_dict = json.loads(result)
-
-
-        if len(result_dict) > 0:
-            return result_dict[0]
-        else:
-            return []
+        return result_dict[0] if result_dict else []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")   
     
@@ -165,14 +162,14 @@ async def create_loan(loan: Loan) -> Loan:
 async def get_all_books(id_loan: int) -> list[Loan_Books]:
     select_script = """
         SELECT
-            b.id_book
+            b.id
             , b.title
             , b.date_published
             , b.isbn
             , lb.return_status
         FROM library.books b
-        inner join library.loan_books lb
-        on b.id_book =lb.id_book
+        inner join library.loans_books lb
+        on b.id =lb.id_book
         WHERE lb.id_loan = ?
     """
 
@@ -191,17 +188,17 @@ async def get_all_books(id_loan: int) -> list[Loan_Books]:
 async def get_one_book(id_loan: int, id_book: int) -> Loan_Books:
     select_script = """
         SELECT
-            b.id_book
+            b.id
             , b.id_genre
             , b.title
             , b.date_published
             , b.isbn
             , lb.return_status
         FROM library.books b
-        inner join library.loan_books lb 
-        on b.id_book = lb.id_book
+        inner join library.loans_books lb 
+        on b.id = lb.id_book
         WHERE lb.id_loan = ?
-        and b.id_book = ?;
+        and b.id = ?;
     """
 
     params = [id_loan, id_book]
@@ -220,8 +217,8 @@ async def add_book_to_loan(id_loan: int, id_book: int) -> Loan_Books:
     
     check_script = """
         SELECT COUNT(*) AS active_count
-        FROM library.loan_books lb
-        INNER JOIN library.loans l ON lb.id_loan = l.id_loan
+        FROM library.loans_books lb
+        INNER JOIN library.loans l ON lb.id_loan = l.id
         WHERE lb.id_book = ? AND l.loan_active = 1;
     """
     check_params = [id_book]
@@ -236,7 +233,7 @@ async def add_book_to_loan(id_loan: int, id_book: int) -> Loan_Books:
         raise HTTPException(status_code=409, detail=f"Error al validar disponibilidad del libro: {str(e)}")
     
     insert_script = """
-        INSERT INTO [library].[loan_books] ([id_loan], [id_book])
+        INSERT INTO [library].[loans_books] ([id_loan], [id_book])
         VALUES (?, ?);
     """
 
@@ -252,16 +249,17 @@ async def add_book_to_loan(id_loan: int, id_book: int) -> Loan_Books:
 
     select_script = """
         SELECT
-            b.id_book
+            b.id as id_book
+            , lb.id_loan
             , b.id_genre
             , b.title
             , b.date_published
             , b.isbn
-            , b.its_active
+            , lb.return_status
         FROM library.books b
-        inner join library.loan_books lb 
-        on b.id_book = lb.id_book
-        WHERE b.id_book = ?
+        inner join library.loans_books lb 
+        on b.id = lb.id_book
+        WHERE b.id = ?
         and lb.id_loan = ?;
     """
 
@@ -275,7 +273,7 @@ async def add_book_to_loan(id_loan: int, id_book: int) -> Loan_Books:
     
 async def remove_book_from_loan(id_loan: int, id_book: int) -> str:
     delete_script = """
-        DELETE FROM [library].[loan_books]
+        DELETE FROM [library].[loans_books]
         WHERE [id_loan] = ? AND [id_book] = ?;
     """
 
@@ -295,7 +293,7 @@ async def update_book_info(book_data: Loan_Books) -> Loan_Books:
     variables = " = ?, ".join(keys)+" = ?"
 
     updatescript = f"""
-        UPDATE [library].[loan_books]
+        UPDATE [library].[loans_books]
         SET {variables}
         WHERE [id_loan] = ? AND [id_book] = ?;
     """
@@ -317,10 +315,10 @@ async def update_book_info(book_data: Loan_Books) -> Loan_Books:
             , b.isbn
             , lb.return_status
         FROM library.books b
-        inner join library.loan_books lb 
-        on b.id_book = lb.id_book
+        inner join library.loans_books lb 
+        on b.id = lb.id_book
         WHERE lb.id_loan = ?
-        and b.id_book = ?;
+        and b.id = ?;
     """
 
     params = [book_data.id_loan, book_data.id_book]

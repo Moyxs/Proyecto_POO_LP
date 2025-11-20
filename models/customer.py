@@ -3,7 +3,7 @@ from typing import Optional
 import re
 
 class Customer(BaseModel):
-    id_customer: Optional[int] = Field(
+    id: Optional[int] = Field(
         default=None,
         description="El ID autoincrementable del cliente"
         )

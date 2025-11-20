@@ -9,11 +9,20 @@ from routes.loan import router as loan_router
 app = FastAPI()
 
 
+<<<<<<< HEAD
 @app.get("/")
 def read_root():
     return {
         "version": "1.1.0"
     }
+=======
+#@app.get("/")
+#def read_root():
+#    return {
+#        "Hello": "World",
+#        "version": "0.1.0"
+#    }
+>>>>>>> origin/mi-rama
 
 app.include_router(authors_router)
 app.include_router(books_router)

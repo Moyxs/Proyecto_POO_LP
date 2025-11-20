@@ -4,7 +4,7 @@ from datetime import date
 import re
 
 class Books(BaseModel):
-    id_book: Optional[int] = Field(
+    id: Optional[int] = Field(
         default=None,
         description="El ID autoincrementable del libro"
         )
